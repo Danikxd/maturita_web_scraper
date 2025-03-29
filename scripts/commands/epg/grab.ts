@@ -5,6 +5,7 @@ import { QueueCreator, Job, ChannelsParser } from '../../core'
 import { Channel } from 'epg-grabber'
 import path from 'path'
 import { SITES_DIR } from '../../constants'
+import { uploadToR2 } from './../epg/r2uploader'
 
 program
   .option('-s, --site <name>', 'Name of the site to parse')
@@ -114,6 +115,7 @@ async function runJob({ logger, parsedChannels }: { logger: Logger; parsedChanne
   })
 
   await job.run()
+  await uploadToR2(options.output, 'guide.xml')
 
   logger.success(`  done in ${timer.format('HH[h] mm[m] ss[s]')}`)
 }
