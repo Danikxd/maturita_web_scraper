@@ -127,7 +127,7 @@ async function runJob({ logger, parsedChannels }: { logger: Logger; parsedChanne
   })
 
   await job.run()
-//  await uploadToR2(options.output, 'guide.xml')
+ await uploadToR2(options.output, 'guide.xml')
 
   logger.success(`  done in ${timer.format('HH[h] mm[m] ss[s]')}`)
 }

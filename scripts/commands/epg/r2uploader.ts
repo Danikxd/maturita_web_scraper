@@ -27,8 +27,8 @@ export async function uploadToR2(filePath: string, filename: string) {
 
   try {
     await r2.send(command)
-    console.log(`✅ Uploaded: https://${process.env.R2_BUCKET}.${process.env.R2_ENDPOINT?.replace('https://', '')}/${filename}`)
+    console.log(`Uploaded: https://${process.env.R2_BUCKET}.${process.env.R2_ENDPOINT?.replace('https://', '')}/${filename}`)
   } catch (err) {
-    console.error('❌ Upload failed:', err)
+    console.error('Upload failed:', err)
   }
 }
