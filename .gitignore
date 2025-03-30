@@ -4,6 +4,7 @@
 /guide.xml
 /guide.xml.gz
 /.env
+/scripts/commands/epg/runtime.json
 
 # macOS
 .DS_Store

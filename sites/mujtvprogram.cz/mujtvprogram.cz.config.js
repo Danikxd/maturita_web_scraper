@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const dayjs = require('dayjs')
 const utc = require('dayjs/plugin/utc')
 const timezone = require('dayjs/plugin/timezone')
@@ -10,11 +12,27 @@ dayjs.extend(customParseFormat)
 
 module.exports = {
   site: 'mujtvprogram.cz',
-  days: 2,
+  days: 1,
   url({ channel, date }) {
-    const diff = date.diff(dayjs.utc().startOf('d'), 'd')
+    
+    let den = null
+    try {
+      const file = path.resolve(__dirname, '../../scripts/commands/epg/runtime.json')
+      const json = JSON.parse(fs.readFileSync(file, 'utf8'))
+      if (typeof json.den === 'number') {
+        den = json.den
+      }
+    } catch (err) {
+      // ignore if file doesn't exist or is invalid
+    }
+
+    const diff = typeof den === 'number'
+      ? den
+      : date.diff(dayjs.utc().startOf('d'), 'd')
+
     return `https://services.mujtvprogram.cz/tvprogram2services/services/tvprogrammelist_mobile.php?channel_cid=${channel.site_id}&day=${diff}`
   },
+
   parser({ content }) {
     let programs = []
     const items = parseItems(content)
@@ -25,20 +43,21 @@ module.exports = {
         stop: parseTime(item.endDate._text),
         description: parseDescription(item),
         category: parseCategory(item),
-        date: item.year._text || null,
+        date: item.year?._text || null,
         director: parseList(item.directors),
         actor: parseList(item.actors)
       })
     })
     return programs
   },
+
   async channels() {
     const cheerio = require('cheerio')
     const axios = require('axios')
 
     let channels = []
-
     const categories = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
     for (let category of categories) {
       const params = new URLSearchParams()
       params.append('localization', 1)
@@ -76,6 +95,8 @@ module.exports = {
   }
 }
 
+
+
 function parseItems(content) {
   try {
     const data = convert.xml2js(content, {
@@ -90,6 +111,7 @@ function parseItems(content) {
     return []
   }
 }
+
 function parseDescription(item) {
   if (item.longDescription) return item.longDescription._text
   if (item.shortDescription) return item.shortDescription._text
@@ -101,6 +123,7 @@ function parseList(list) {
   if (!list._text) return []
   return typeof list._text === 'string' ? list._text.split(', ') : []
 }
+
 function parseTime(time) {
   return dayjs.tz(time, 'DD.MM.YYYY HH.mm', 'Europe/Prague')
 }

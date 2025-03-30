@@ -7,6 +7,10 @@ import path from 'path'
 import { SITES_DIR } from '../../constants'
 import { uploadToR2 } from './../epg/r2uploader'
 
+import dotenv from 'dotenv'
+import fs from 'fs'
+dotenv.config()
+
 program
   .option('-s, --site <name>', 'Name of the site to parse')
   .option(
@@ -29,6 +33,7 @@ program
     value => parseInt(value),
     1
   )
+  .option('--den <number>', 'Override "day" parameter in site URL (e.g., for mujtvprogram.cz)', value => parseInt(value))
   .option('--cron <expression>', 'Schedule a script run (example: "0 0 * * *")')
   .option('--gzip', 'Create a compressed version of the guide as well', false)
   .parse(process.argv)
@@ -45,6 +50,7 @@ export type GrabOptions = {
   days?: number
   cron?: string
   proxy?: string
+  den?: number
 }
 
 const options: GrabOptions = program.opts()
@@ -52,6 +58,12 @@ const options: GrabOptions = program.opts()
 async function main() {
   if (!options.site && !options.channels)
     throw new Error('One of the arguments must be presented: `--site` or `--channels`')
+
+  if (typeof options.den === 'number') {
+    const runtimeFile = path.resolve(__dirname, 'runtime.json')
+  
+    fs.writeFileSync(runtimeFile, JSON.stringify({ den: options.den }, null, 2))
+  }
 
   const logger = new Logger()
 
@@ -115,7 +127,7 @@ async function runJob({ logger, parsedChannels }: { logger: Logger; parsedChanne
   })
 
   await job.run()
-  await uploadToR2(options.output, 'guide.xml')
+//  await uploadToR2(options.output, 'guide.xml')
 
   logger.success(`  done in ${timer.format('HH[h] mm[m] ss[s]')}`)
 }
